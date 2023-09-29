@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,7 +13,8 @@ import (
 )
 
 type Database interface {
-	AddRequest(request *FizzBuzzRequest) (int64, error)
+	AddRequest(request *FizzBuzzRequest) error
+	GetMostUsedRequest() (*MostUsedRequest, error)
 }
 
 type DB struct {
@@ -20,12 +23,15 @@ type DB struct {
 
 const (
 	maxRetries = 5
-	retryDelay = 5 * time.Second
+	retryDelay = 10 * time.Second
 )
 
 func connectToDatabase(config *config.Database) (*sqlx.DB, error) {
-	var db *sqlx.DB
-	var err error
+	var (
+		db        *sqlx.DB
+		err       error
+		retryTime = retryDelay
+	)
 
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("Attempt to connect to the database (try %d/%d)", i+1, maxRetries)
@@ -40,7 +46,9 @@ func connectToDatabase(config *config.Database) (*sqlx.DB, error) {
 			}
 		}
 
-		time.Sleep(retryDelay)
+		log.Printf("Failed to connect to the database, retrying in %s", retryTime)
+		time.Sleep(retryTime)
+		retryTime *= 2
 	}
 
 	return nil, fmt.Errorf("failed to connect to the database after %d retries: %w", maxRetries, err)
@@ -54,8 +62,7 @@ func NewDB(config *config.Database) (*DB, error) {
 	return &DB{instance: dbConnection}, nil
 }
 
-func (db *DB) AddRequest(request *FizzBuzzRequest) (int64, error) {
-	var id int64
+func (db *DB) AddRequest(request *FizzBuzzRequest) error {
 	err := db.instance.QueryRow(
 		"INSERT INTO fizzbuzz.request (value_1, value_2, replace_1, replace_2, max) VALUES (?, ?, ?, ?, ?)",
 		request.Int1,
@@ -63,9 +70,25 @@ func (db *DB) AddRequest(request *FizzBuzzRequest) (int64, error) {
 		request.Str1,
 		request.Str2,
 		request.Limit,
-	).Scan(&id)
-	if err != nil {
-		return 0, err
+	)
+	if err.Err() != nil {
+		return err.Err()
 	}
-	return id, nil
+	return nil
+}
+
+var ErrNoRequest = errors.New("no request found")
+
+func (db *DB) GetMostUsedRequest() (*MostUsedRequest, error) {
+	var request MostUsedRequest
+	err := db.instance.QueryRow(
+		"select fizzbuzz.request.value_1, fizzbuzz.request.value_2, count(*) as count from fizzbuzz.request group by fizzbuzz.request.value_1, fizzbuzz.request.value_2 order by count desc limit 1;",
+	).Scan(&request.Int1, &request.Int2, &request.Hints)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRequest
+		}
+		return nil, err
+	}
+	return &request, nil
 }

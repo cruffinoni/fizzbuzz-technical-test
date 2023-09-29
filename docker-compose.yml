@@ -10,13 +10,13 @@ services:
       PORT: 8080
       DATABASE_USERNAME: root
       DATABASE_PASSWORD: root
-      DATABASE_HOST: db
+      DATABASE_HOST: mysqldb
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      - mysqldb
 
-  db:
+  mysqldb:
     build:
       context: ./
       dockerfile: docker/database/Dockerfile
@@ -24,6 +24,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
     volumes:
       - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
 
 volumes:
   db_data:

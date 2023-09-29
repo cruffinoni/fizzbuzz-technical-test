@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS request (
     value_2 INT NOT NULL,
     replace_1 VARCHAR(255) NOT NULL,
     replace_2 VARCHAR(255) NOT NULL,
-    max INT NOT NULL
+    max INT NOT NULL,
+    PRIMARY KEY (id)
 );

@@ -1,9 +1,11 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/cruffinoni/fizzbuzz/internal/database"
 	"github.com/cruffinoni/fizzbuzz/internal/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -55,5 +57,29 @@ func (r *Routes) PlayFizzBuzz(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.NewBadRequestBuilder("replacements cannot be empty"))
 		return
 	}
+
+	if err := r.db.AddRequest(&database.FizzBuzzRequest{
+		Int1:  int64(fizzBuzzBody.Number1),
+		Int2:  int64(fizzBuzzBody.Number2),
+		Limit: int64(fizzBuzzBody.Limit),
+		Str1:  fizzBuzzBody.Replace1,
+		Str2:  fizzBuzzBody.Replace2,
+	}); err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.NewInternalServerErrorBuilder(err))
+		return
+	}
 	ctx.JSON(http.StatusOK, formatFizzBuzzFromBody(&fizzBuzzBody))
+}
+
+func (r *Routes) GetMostUsedRequest(ctx *gin.Context) {
+	mostUsed, err := r.db.GetMostUsedRequest()
+	if err != nil {
+		if errors.Is(err, database.ErrNoRequest) {
+			ctx.JSON(http.StatusNotFound, utils.NewStatusOKBuilder("not enough data"))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.NewInternalServerErrorBuilder(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, mostUsed)
 }

@@ -28,8 +28,9 @@ func main() {
 	routes := api.NewRoutes(db)
 	router := gin.New()
 
-	g := router.Group("/tasks")
+	g := router.Group("/")
 	g.POST("/play", routes.PlayFizzBuzz)
+	g.GET("/most-used", routes.GetMostUsedRequest)
 	g.GET("/ping", routes.Ping)
 
 	log.Printf("Starting api...")
