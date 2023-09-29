@@ -71,5 +71,5 @@ The `fizzbuzz` project is a modern twist on the classic fizz-buzz game. Traditio
 ---
 
 ## Remark
-Is it possible for the initial setup to take some time. 
+Is it possible for the initial setup to take some time (about 3-5 mins). 
 MySQL 8.0 needs to be downloaded and initialized. The database schema is then created and the project is compiled.
