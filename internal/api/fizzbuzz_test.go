@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -47,8 +48,16 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(35*time.Second))
 	defer cancel()
 	go func() {
-		<-ctx.Done() // Ctx is only used in this goroutine, so we can safely ignore any return value and assume it's the ctx.Done() channel
-		t.Error("Test timed out")
+		select {
+		case <-ctx.Done():
+			switch err := ctx.Err(); {
+			case errors.Is(err, context.DeadlineExceeded):
+				t.Error("test timeout")
+				return
+			case errors.Is(err, context.Canceled):
+				return
+			}
+		}
 	}()
 
 	var (
