@@ -13,13 +13,24 @@ The `fizzbuzz` project is a modern twist on the classic fizz-buzz game. Traditio
    
 2. **Docker Setup**: This project uses docker-compose. Ensure that Docker is installed on your machine. Navigate to the project directory and run:
     ```bash
-    docker-compose up
+    make docker
     ```
 
 3. **Testing the API**: It's recommended to test the API with the "ping" route to ensure everything is running smoothly.
     ```bash
    curl http://localhost:8080/ping
    ```
+
+## Commands
+
+The project uses a Makefile to simplify the build process. The following commands are available:
+- `make docker`: Builds the project and runs it in a detached docker container.
+  - **Note** : After running this command, the logs of the API will be displayed in the terminal. To stop this behavior, press `Ctrl + C`; the container will continue to run in the background. 
+- `make test`: Runs the unit tests locally.
+  - **Note** : The command will make a `go mod vendor` before running the tests. This is to ensure that the tests are run with the correct dependencies.
+- `make doc` : Generates, locally, the documentation for the project. 
+  - **Note** : Open the 'coverage.html' file in the root project directory to view the coverage report.
+- `make clean`: Removes the local generated files.
 
 ## API Endpoints
 
