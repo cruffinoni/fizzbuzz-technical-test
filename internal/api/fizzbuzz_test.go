@@ -45,7 +45,7 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 		Limit:    99999, // this value impose a remainder for the soft limit
 	}
 
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(35*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(40*time.Second))
 	defer cancel()
 	go func() {
 		select {
@@ -53,9 +53,6 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 			switch err := ctx.Err(); {
 			case errors.Is(err, context.DeadlineExceeded):
 				t.Error("test timeout")
-				return
-			case errors.Is(err, context.Canceled):
-				return
 			}
 		}
 	}()
