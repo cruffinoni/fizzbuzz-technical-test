@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -42,6 +43,13 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 		Replace2: "buzz",
 		Limit:    99999, // this value impose a remainder for the soft limit
 	}
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(35*time.Second))
+	defer cancel()
+	go func() {
+		<-ctx.Done() // Ctx is only used in this goroutine, so we can safely ignore any return value and assume it's the ctx.Done() channel
+		t.Error("Test timed out")
+	}()
 
 	var (
 		disabledPerfElapsed = time.Duration(0)
