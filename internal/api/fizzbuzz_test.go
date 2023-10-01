@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cruffinoni/fizzbuzz/internal/database"
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,39 @@ func (m *MockDB) GetMostUsedRequest() (*database.MostUsedRequest, error) {
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 	os.Exit(m.Run())
+}
+
+func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
+	input := &PlayFizzBuzzBody{
+		Number1:  3,
+		Number2:  5,
+		Replace1: "fizz",
+		Replace2: "buzz",
+		Limit:    99999, // this value impose a remainder for the soft limit
+	}
+
+	var (
+		disabledPerfElapsed = time.Duration(0)
+		disabledPerfResult  *PlayFizzBuzzResponse
+	)
+	t.Run("disabled_perf", func(t *testing.T) {
+		start := time.Now()
+		disabledPerfResult = basicFormatFizzBuzzFromBody(input)
+		disabledPerfElapsed = time.Since(start)
+		assert.True(t, disabledPerfElapsed.Seconds() < 10)
+	})
+	var (
+		enabledPerfElapsed = time.Duration(0)
+		enabledPerfResult  *PlayFizzBuzzResponse
+	)
+	t.Run("enabled_perf", func(t *testing.T) {
+		start := time.Now()
+		enabledPerfResult = formatFizzBuzzFromBodyWithPerformance(input)
+		enabledPerfElapsed = time.Since(start)
+		assert.True(t, enabledPerfElapsed.Seconds() < 1)
+	})
+	assert.True(t, enabledPerfElapsed < disabledPerfElapsed)
+	assert.Equal(t, enabledPerfResult.Result, disabledPerfResult.Result)
 }
 
 func TestRoutes_PlayFizzBuzz(t *testing.T) {

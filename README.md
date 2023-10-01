@@ -82,5 +82,7 @@ The project uses a Makefile to simplify the build process. The following command
 ---
 
 ## Remark
-Is it possible for the initial setup to take some time (about 3-5 mins). 
+1. Is it possible for the initial setup to take some time (about 3-5 mins). 
 MySQL 8.0 needs to be downloaded and initialized. The database schema is then created and the project is compiled.
+2. The fizzbar project has a "performance mode". When the limit is above 10 000, the API switch his algorithm to a more performant one with parallelism.
+This mode is activated by default but can be disabled by setting `disable_performance` to `true` in the body of the request. In both case, the result is unchanged.

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/cruffinoni/fizzbuzz/internal/database"
 	"github.com/cruffinoni/fizzbuzz/internal/utils"
@@ -11,32 +13,91 @@ import (
 )
 
 type PlayFizzBuzzBody struct {
-	Number1  int64  `json:"number1"`
-	Number2  int64  `json:"number2"`
-	Replace1 string `json:"replace1"`
-	Replace2 string `json:"replace2"`
-	Limit    int64  `json:"limit"`
+	Number1            int64  `json:"number1" binding:"required"`
+	Number2            int64  `json:"number2" binding:"required"`
+	Replace1           string `json:"replace1" binding:"required"`
+	Replace2           string `json:"replace2" binding:"required"`
+	Limit              int64  `json:"limit" binding:"required"`
+	DisablePerformance bool   `json:"disable_performance"`
 }
 
 type PlayFizzBuzzResponse struct {
 	Result string `json:"result"`
 }
 
-func formatFizzBuzzFromBody(req *PlayFizzBuzzBody) *PlayFizzBuzzResponse {
+const softLimit = 10000
+
+func formatFizzBuzzFromBody(start int64, req *PlayFizzBuzzBody) *PlayFizzBuzzResponse {
 	var result string
-	for i := int64(1); i <= req.Limit; i++ {
-		if i%req.Number1 == 0 && i%req.Number2 == 0 {
-			result += req.Replace1 + req.Replace2
-		} else if i%req.Number1 == 0 {
-			result += req.Replace1
-		} else if i%req.Number2 == 0 {
-			result += req.Replace2
-		} else {
-			result += strconv.FormatInt(i, 10)
-		}
-		result += ","
+	for i := start; i <= req.Limit; i++ {
+		result += insertFizzBuzzAlg(i, req) + ","
+	}
+	if result == "" {
+		return &PlayFizzBuzzResponse{Result: ""}
 	}
 	return &PlayFizzBuzzResponse{Result: result[:len(result)-1]}
+}
+
+func basicFormatFizzBuzzFromBody(req *PlayFizzBuzzBody) *PlayFizzBuzzResponse {
+	return formatFizzBuzzFromBody(1, req)
+}
+
+func insertFizzBuzzAlg(i int64, req *PlayFizzBuzzBody) string {
+	if i%req.Number1 == 0 && i%req.Number2 == 0 {
+		return req.Replace1 + req.Replace2
+	} else if i%req.Number1 == 0 {
+		return req.Replace1
+	} else if i%req.Number2 == 0 {
+		return req.Replace2
+	} else {
+		return strconv.FormatInt(i, 10)
+	}
+}
+
+func formatFizzBuzzFromBodyWithPerformance(req *PlayFizzBuzzBody) *PlayFizzBuzzResponse {
+	var (
+		routines    = req.Limit / softLimit
+		remainder   = req.Limit % softLimit
+		resultOrder = make([]string, routines+1)
+		wg          sync.WaitGroup
+		mu          sync.Mutex
+	)
+	wg.Add(int(routines))
+	for i := int64(0); i < routines; i++ {
+		go func(routineNb int64) {
+			defer wg.Done()
+			start := routineNb*softLimit + 1
+			limit := (routineNb + 1) * softLimit
+			localRes := formatFizzBuzzFromBody(start, &PlayFizzBuzzBody{
+				Number1:  req.Number1,
+				Number2:  req.Number2,
+				Replace1: req.Replace1,
+				Replace2: req.Replace2,
+				Limit:    limit,
+			})
+			mu.Lock()
+			resultOrder[routineNb] = localRes.Result
+			mu.Unlock()
+		}(i)
+	}
+	if remainder > 0 {
+		start := routines*softLimit + 1
+		localRes := formatFizzBuzzFromBody(start, &PlayFizzBuzzBody{
+			Number1:  req.Number1,
+			Number2:  req.Number2,
+			Replace1: req.Replace1,
+			Replace2: req.Replace2,
+			Limit:    req.Limit,
+		})
+		resultOrder[routines] = localRes.Result
+	}
+	wg.Wait()
+	res := strings.Join(resultOrder, ",")
+	l := len(res)
+	if res[l-1] == ',' {
+		res = res[:l-1]
+	}
+	return &PlayFizzBuzzResponse{Result: res}
 }
 
 // PlayFizzBuzz godoc
@@ -78,7 +139,11 @@ func (r *Routes) PlayFizzBuzz(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, utils.NewInternalServerErrorBuilder(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, formatFizzBuzzFromBody(&fizzBuzzBody))
+	if fizzBuzzBody.Limit > softLimit && !fizzBuzzBody.DisablePerformance {
+		ctx.JSON(http.StatusOK, formatFizzBuzzFromBodyWithPerformance(&fizzBuzzBody))
+	} else {
+		ctx.JSON(http.StatusOK, basicFormatFizzBuzzFromBody(&fizzBuzzBody))
+	}
 }
 
 func (r *Routes) GetMostUsedRequest(ctx *gin.Context) {
