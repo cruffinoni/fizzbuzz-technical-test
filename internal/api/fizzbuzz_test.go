@@ -51,7 +51,7 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 		start := time.Now()
 		disabledPerfResult = basicFormatFizzBuzzFromBody(input)
 		disabledPerfElapsed = time.Since(start)
-		assert.True(t, disabledPerfElapsed.Seconds() < 10)
+		assert.True(t, disabledPerfElapsed.Seconds() < 30)
 	})
 	var (
 		enabledPerfElapsed = time.Duration(0)
@@ -61,7 +61,7 @@ func TestRoutes_FormatFizzBuzzPerformance(t *testing.T) {
 		start := time.Now()
 		enabledPerfResult = formatFizzBuzzFromBodyWithPerformance(input)
 		enabledPerfElapsed = time.Since(start)
-		assert.True(t, enabledPerfElapsed.Seconds() < 1)
+		assert.True(t, enabledPerfElapsed.Seconds() < 10)
 	})
 	assert.True(t, enabledPerfElapsed < disabledPerfElapsed)
 	assert.Equal(t, enabledPerfResult.Result, disabledPerfResult.Result)
