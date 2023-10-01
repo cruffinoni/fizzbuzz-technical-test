@@ -107,8 +107,8 @@ func formatFizzBuzzFromBodyWithPerformance(req *PlayFizzBuzzBody) *PlayFizzBuzzR
 //	@ID				play-fizzbuzz
 //	@Accept			json
 //	@Produce		json
-//	@Param			b body PlayFizzBuzzBody true "Required parameters to play fizz-buzz"
-//	@Success		200			{object}	PlayFizzBuzzResponse
+//	@Param			b	body		PlayFizzBuzzBody	true	"Required parameters to play fizz-buzz"
+//	@Success		200	{object}	PlayFizzBuzzResponse
 //	@Router			/play [post]
 func (r *Routes) PlayFizzBuzz(ctx *gin.Context) {
 	var fizzBuzzBody PlayFizzBuzzBody
