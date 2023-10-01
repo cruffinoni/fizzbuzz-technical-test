@@ -28,45 +28,45 @@ The `fizzbuzz` project is a modern twist on the classic fizz-buzz game. Traditio
 - **Endpoint**: `/play`
 - **Method**: `POST`
 - **Body**:
-```json
-{
-	"number1": <int>,
-	"number2": <int>,
-	"replace1": <string>,
-	"replace2": <string>,
-	"limit": <int>
-}
-```
+   ```json
+   {
+       "number1": <int64>,
+       "number2": <int64>,
+       "replace1": <string>,
+       "replace2": <string>,
+       "limit": <int64>
+   }
+   ```
 - **Response**:
-```json
-{
-	"result": <string>
-}
-```
+   ```json
+   {
+       "result": <string>
+   }
+   ```
 
 ### 2. Get Most Used Request
 
 - **Endpoint**: `/most-used`
 - **Method**: `GET`
 - **Response**:
-```json
-{
-	"int1": <int64>,
-	"int2": <int64>,
-	"hints": <int64>
-}
-```
+   ```json
+   {
+       "int1": <int64>,
+       "int2": <int64>,
+       "hints": <int64>
+   }
+   ```
 
 ### 3. Ping
 
 - **Endpoint**: `/ping`
 - **Method**: `GET`
 - **Response**:
-```json
-{
-	"message": "pong"
-}
-```
+   ```json
+   {
+       "message": "pong"
+   }
+   ```
 
 ---
 

@@ -12,7 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Database interface {
+type RequestHandler interface {
 	AddRequest(request *FizzBuzzRequest) error
 	GetMostUsedRequest() (*MostUsedRequest, error)
 }

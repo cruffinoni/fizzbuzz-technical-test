@@ -1,0 +1,79 @@
+basePath: /
+definitions:
+  api.PlayFizzBuzzResponse:
+    properties:
+      result:
+        type: string
+    type: object
+  utils.StatusOKBuilder:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a customized FizzBuzz server.
+  title: FizzBuzz API
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      description: Returns pong
+      operationId: ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.StatusOKBuilder'
+      summary: Ping
+  /play:
+    post:
+      consumes:
+      - application/json
+      description: Returns a customized fizz-buzz list
+      operationId: play-fizzbuzz
+      parameters:
+      - description: Number1
+        in: body
+        name: number1
+        required: true
+        schema:
+          type: integer
+      - description: Number2
+        in: body
+        name: number2
+        required: true
+        schema:
+          type: integer
+      - description: Replace String1
+        in: body
+        name: replace1
+        required: true
+        schema:
+          type: string
+      - description: Replace String2
+        in: body
+        name: replace2
+        required: true
+        schema:
+          type: string
+      - description: Limit
+        in: body
+        name: limit
+        required: true
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PlayFizzBuzzResponse'
+      summary: Play custom FizzBuzz
+schemes:
+- http
+swagger: "2.0"

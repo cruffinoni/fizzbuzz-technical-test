@@ -98,14 +98,14 @@ func TestRoutes_PlayFizzBuzz(t *testing.T) {
 			var requestBody PlayFizzBuzzBody
 			_ = json.Unmarshal([]byte(tt.payload), &requestBody)
 			reqDb := &database.FizzBuzzRequest{
-				Int1:  int64(requestBody.Number1),
-				Int2:  int64(requestBody.Number2),
-				Limit: int64(requestBody.Limit),
+				Int1:  requestBody.Number1,
+				Int2:  requestBody.Number2,
+				Limit: requestBody.Limit,
 				Str1:  requestBody.Replace1,
 				Str2:  requestBody.Replace2,
 			}
 			mockDB.On("AddRequest", reqDb).Return(tt.addRequestMockDb(reqDb))
-			routes := Routes{db: mockDB}
+			routes := NewRoutes(mockDB)
 			router := gin.Default()
 			router.POST("/play", routes.PlayFizzBuzz)
 
@@ -148,10 +148,17 @@ func TestRoutes_GetMostUsedRequest(t *testing.T) {
 			},
 		},
 		{
-			name:           "error_db",
+			name:           "generic_error_db",
 			expectedStatus: http.StatusInternalServerError,
 			getRequestMockDb: func() (*database.MostUsedRequest, error) {
 				return nil, assert.AnError
+			},
+		},
+		{
+			name:           "no_data_db",
+			expectedStatus: http.StatusNotFound,
+			getRequestMockDb: func() (*database.MostUsedRequest, error) {
+				return nil, database.ErrNoRequest
 			},
 		},
 	}
@@ -160,7 +167,7 @@ func TestRoutes_GetMostUsedRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDB := new(MockDB)
 			mockDB.On("GetMostUsedRequest").Return(tt.getRequestMockDb())
-			routes := Routes{db: mockDB}
+			routes := NewRoutes(mockDB)
 			router := gin.Default()
 			router.GET("/most-used", routes.GetMostUsedRequest)
 
